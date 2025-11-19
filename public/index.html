@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitCalc - All-in-One Fitness Calculator</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Custom styles to complement Tailwind CSS */
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .tab-active {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background-color: #eff6ff;
+      }
+      .nav-link-active {
+        color: #2563eb;
+      }
+
+      /* Hide number input spinners */
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+      }
+
+      /* Set auth container to flex for split screen */
+      #auth-container {
+        display: flex;
+      }
+
+      /* --- Global Interactive Styles (HCI) --- */
+
+      /* Add smooth transitions to all interactive elements */
+      button,
+      a,
+      input,
+      select,
+      .tab-btn {
+        transition-property: color, background-color, border-color,
+          text-decoration-color, fill, stroke, opacity, box-shadow, transform,
+          filter, backdrop-filter; /* Tailwind's default transition-all */
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 200ms;
+      }
+
+      /* Add a "pop" or "lift" effect on hover for main buttons */
+      /* This applies to: Auth buttons, Calculator buttons, Log Entry, Set Goal */
+      button[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); /* blue-500 shadow */
+      }
+      button[type="submit"]:active {
+        transform: translateY(0px); /* Press down effect */
+        box-shadow: none;
+      }
+
+      /* Add pop effect to logout button */
+      #logout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); /* red-500 shadow */
+      }
+      #logout-btn:active {
+        transform: translateY(0px);
+        box-shadow: none;
+      }
+
+      /* Add a clear focus ring for accessibility (HCI) */
+      /* This enhances the existing Tailwind focus classes */
+      input:focus,
+      select:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); /* blue-500 with 30% opacity */
+        outline: none;
+      }
+
+      /* Subtle hover for gender/tab buttons (if not active) */
+      .gender-btn:not(.bg-blue-100):hover,
+      .tab-btn:not(.tab-active):hover {
+        background-color: #eff6ff; /* blue-50 */
+        color: #3b82f6; /* blue-500 */
+      }
+
+      /* Subtle hover for main nav links (if not active) */
+      .nav-link:not(.nav-link-active):hover {
+        color: #3b82f6; /* blue-500 */
+        transform: translateY(-1px);
+      }
+
+      /* Clearer hover for delete button */
+      .delete-progress:hover {
+        transform: scale(1.15) rotate(2deg);
+      }
+      .delete-progress:active {
+        transform: scale(1.05);
+      }
+
+      /* Remove tap highlight on mobile for a cleaner feel */
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+      /* --- End Global Interactive Styles --- */
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-800">
+    <!-- Authentication Container - SPLIT SCREEN -->
+    <div id="auth-container" class="min-h-screen">
+      <!-- Left Side: Form Panel (with mist blue background) -->
+      <div
+        class="w-full md:w-1/2 flex flex-col justify-center items-center p-8 lg:p-12 bg-blue-50"
+      >
+        <div class="w-full max-w-md">
+          <!-- Logo -->
+          <header class="text-center mb-10">
+            <h1 class="text-5xl font-extrabold text-blue-600">FitCalc</h1>
+            <p class="text-gray-500 mt-2">Your all-in-one fitness companion.</p>
+          </header>
+
+          <!-- Sign Up Page -->
+          <div id="signup-page">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+              <h2 class="text-center text-2xl font-bold text-gray-800 mb-6">
+                Create an Account
+              </h2>
+              <form id="signup-form" class="space-y-4">
+                <div>
+                  <label
+                    for="signup-email"
+                    class="block text-sm font-medium text-gray-600"
+                    >Email</label
+                  >
+                  <input
+                    type="email"
+                    id="signup-email"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    for="signup-password"
+                    class="block text-sm font-medium text-gray-600"
+                    >Password (min. 6 characters)</label
+                  >
+                  <input
+                    type="password"
+                    id="signup-password"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div
+                  id="signup-error"
+                  class="text-red-500 text-sm text-center hidden"
+                ></div>
+                <button
+                  type="submit"
+                  class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+                >
+                  Create Account
+                </button>
+              </form>
+              <p class="text-center text-sm text-gray-500 mt-4">
+                Already have an account?
+                <a
+                  href="#"
+                  id="show-login"
+                  class="font-medium text-blue-600 hover:text-blue-500"
+                  >Log In</a
+                >
+              </p>
+            </div>
+          </div>
+
+          <!-- Login Page (Initially Hidden) -->
+          <div id="login-page" class="hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+              <h2 class="text-center text-2xl font-bold text-gray-800 mb-6">
+                Login to Your Account
+              </h2>
+              <form id="login-form" class="space-y-4">
+                <div>
+                  <label
+                    for="login-email"
+                    class="block text-sm font-medium text-gray-600"
+                    >Email</label
+                  >
+                  <input
+                    type="email"
+                    id="login-email"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    for="login-password"
+                    class="block text-sm font-medium text-gray-600"
+                    >Password</label
+                  >
+                  <input
+                    type="password"
+                    id="login-password"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div
+                  id="login-error"
+                  class="text-red-500 text-sm text-center hidden"
+                ></div>
+                <button
+                  type="submit"
+                  class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+                >
+                  Login
+                </button>
+              </form>
+              <p class="text-center text-sm text-gray-500 mt-4">
+                Don't have an account?
+                <a
+                  href="#"
+                  id="show-signup"
+                  class="font-medium text-blue-600 hover:text-blue-500"
+                  >Sign Up</a
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side: Image Panel with Static Image -->
+      <!-- **** FIXED: Replaced './Image.png' with a functional placeholder from placehold.co **** -->
+      <div
+        class="hidden md:block md:w-1/2 relative overflow-hidden bg-gray-900"
+        style="
+          background-image: url('./Image.png');
+          background-size: cover;
+          background-position: center;
+        "
+      >
+        <!-- Subtle blue overlay for better text contrast/brand matching -->
+        <div class="absolute inset-0 bg-blue-900 opacity-40"></div>
+        <div
+          class="absolute inset-0 flex items-center justify-center p-12 text-white"
+        >
+          <div class="text-center">
+            <!-- You can add text over the image if you like -->
+            <p
+              class="text-lg font-light tracking-widest uppercase text-blue-200"
+            >
+              Track. Calculate. Conquer.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End of Auth Container -->
+
+    <!-- Main App Page (Initially Hidden) -->
+    <div id="app-page" class="hidden">
+      <header class="bg-white shadow-sm sticky top-0 z-10">
+        <nav
+          id="main-nav"
+          class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center"
+        >
+          <h1 class="text-2xl font-bold text-gray-800">FitCalc</h1>
+          <div class="flex items-center space-x-6">
+            <a
+              href="#"
+              data-page="calculators-page"
+              class="nav-link nav-link-active text-sm font-medium transition-colors"
+              >Calculators</a
+            >
+            <a
+              href="#"
+              data-page="progress-tracker-page"
+              class="nav-link text-sm font-medium text-gray-500 hover:text-gray-800"
+              >Progress Tracker</a
+            >
+            <a
+              href="#"
+              data-page="fitness-goals-page"
+              class="nav-link text-sm font-medium text-gray-500 hover:text-gray-800"
+              >Fitness Goals</a
+            >
+            <button
+              id="logout-btn"
+              class="text-sm font-medium text-red-500 hover:text-red-700"
+            >
+              Logout
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      <!-- Main Content -->
+      <main id="calculators-page" class="app-main-page py-10 md:py-16 px-4">
+        <div class="w-full max-w-4xl mx-auto">
+          <div
+            class="text-center bg-blue-600 text-white p-10 rounded-2xl mb-10 shadow-lg"
+          >
+            <h2 class="text-4xl font-bold mb-2">Take Control of Your Health</h2>
+            <p class="text-blue-100 max-w-2xl mx-auto">
+              Use our collection of calculators to track your fitness journey,
+              one number at a time.
+            </p>
+          </div>
+          <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <div class="mb-8">
+              <div class="border-b border-gray-200">
+                <nav class="-mb-px flex flex-wrap gap-x-4 gap-y-2" id="tabs">
+                  <button
+                    data-tab="bmi"
+                    class="tab-btn tab-active py-3 px-4 text-sm font-medium text-center text-gray-500 rounded-t-lg border-b-2 border-transparent"
+                  >
+                    BMI Calculator
+                  </button>
+                  <button
+                    data-tab="calories"
+                    class="tab-btn py-3 px-4 text-sm font-medium text-center text-gray-500 rounded-t-lg border-b-2 border-transparent"
+                  >
+                    Calorie Intake
+                  </button>
+                  <button
+                    data-tab="water"
+                    class="tab-btn py-3 px-4 text-sm font-medium text-center text-gray-500 rounded-t-lg border-b-2 border-transparent"
+                  >
+                    Water Intake
+                  </button>
+                  <button
+                    data-tab="protein"
+                    class="tab-btn py-3 px-4 text-sm font-medium text-center text-gray-500 rounded-t-lg border-b-2 border-transparent"
+                  >
+                    Protein Intake
+                  </button>
+                </nav>
+              </div>
+            </div>
+            <div id="calculators">
+              <div id="bmi" class="calculator-content space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-700">
+                  BMI Calculator
+                </h2>
+                <form id="bmi-form" class="space-y-4">
+                  <div>
+                    <label
+                      for="bmi-height"
+                      class="block text-sm font-medium text-gray-600"
+                      >Height (cm)</label
+                    >
+                    <input
+                      type="number"
+                      id="bmi-height"
+                      min="0"
+                      class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="e.g., 175"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="bmi-weight"
+                      class="block text-sm font-medium text-gray-600"
+                      >Weight (kg)</label
+                    >
+                    <input
+                      type="number"
+                      id="bmi-weight"
+                      min="0"
+                      class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="e.g., 70"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+                  >
+                    Calculate & Log BMI
+                  </button>
+                </form>
+                <div
+                  id="bmi-result"
+                  class="hidden p-4 bg-blue-50 rounded-lg text-center"
+                ></div>
+              </div>
+
+              <div id="calories" class="calculator-content space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-700">
+                  Daily Calorie Intake
+                </h2>
+                <form id="calorie-form" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        for="calorie-age"
+                        class="block text-sm font-medium text-gray-600"
+                        >Age</label
+                      >
+                      <input
+                        type="number"
+                        id="calorie-age"
+                        min="0"
+                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="e.g., 25"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-600"
+                        >Gender</label
+                      >
+                      <div class="mt-1 flex rounded-md shadow-sm">
+                        <button
+                          type="button"
+                          data-value="male"
+                          class="gender-btn relative inline-flex items-center space-x-2 rounded-l-md border border-gray-300 bg-white px-4 py-2 text-sm"
+                        >
+                          Male
+                        </button>
+                        <button
+                          type="button"
+                          data-value="female"
+                          class="gender-btn relative -ml-px inline-flex items-center space-x-2 rounded-r-md border border-gray-300 bg-white px-4 py-2 text-sm"
+                        >
+                          Female
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        for="calorie-height"
+                        class="block text-sm font-medium text-gray-600"
+                        >Height (cm)</label
+                      >
+                      <input
+                        type="number"
+                        id="calorie-height"
+                        min="0"
+                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="e.g., 175"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="calorie-weight"
+                        class="block text-sm font-medium text-gray-600"
+                        >Weight (kg)</label
+                      >
+                      <input
+                        type="number"
+                        id="calorie-weight"
+                        min="0"
+                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="e.g., 70"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      for="activity-level"
+                      class="block text-sm font-medium text-gray-600"
+                      >Activity Level</label
+                    >
+                    <select
+                      id="activity-level"
+                      class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value="1.2">Sedentary</option>
+                      <option value="1.375">Lightly active</option>
+                      <option value="1.55">Moderately active</option>
+                      <option value="1.725">Very active</option>
+                      <option value="1.9">Super active</option>
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+                  >
+                    Calculate Calories
+                  </button>
+                </form>
+                <div
+                  id="calorie-result"
+                  class="hidden p-4 bg-blue-50 rounded-lg text-center"
+                ></div>
+              </div>
+              <div id="water" class="calculator-content space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-700">
+                  Daily Water Intake
+                </h2>
+                <form id="water-form" class="space-y-4">
+                  <div>
+                    <label
+                      for="water-weight"
+                      class="block text-sm font-medium text-gray-600"
+                      >Weight (kg)</label
+                    >
+                    <input
+                      type="number"
+                      id="water-weight"
+                      min="0"
+                      class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="e.g., 70"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="water-activity"
+                      class="block text-sm font-medium text-gray-600"
+                      >Daily Activity (minutes)</label
+                    >
+                    <input
+                      type="number"
+                      id="water-activity"
+                      min="0"
+                      class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="e.g., 30"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+                  >
+                    Calculate Water Intake
+                  </button>
+                </form>
+                <div
+                  id="water-result"
+                  class="hidden p-4 bg-blue-50 rounded-lg text-center"
+                ></div>
+              </div>
+              <div id="protein" class="calculator-content space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-700">
+                  Daily Protein Intake
+                </h2>
+                <form id="protein-form" class="space-y-4">
+                  <div>
+                    <label
+                      for="protein-weight"
+                      class="block text-sm font-medium text-gray-600"
+                      >Weight (kg)</label
+                    >
+                    <input
+                      type="number"
+                      id="protein-weight"
+                      min="0"
+                      class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="e.g., 70"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="protein-goal"
+                      class="block text-sm font-medium text-gray-600"
+                      >Fitness Goal</label
+                    >
+                    <select
+                      id="protein-goal"
+                      class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value="0.8">Sedentary / Weight Loss</option>
+                      <option value="1.3">Maintain Muscle (Active)</option>
+                      <option value="1.8">Build Muscle</option>
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+                  >
+                    Calculate Protein
+                  </button>
+                </form>
+                <div
+                  id="protein-result"
+                  class="hidden p-4 bg-blue-50 rounded-lg text-center"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <main
+        id="progress-tracker-page"
+        class="app-main-page hidden py-10 md:py-16 px-4"
+      >
+        <div
+          class="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8"
+        >
+          <h2 class="text-2xl font-semibold text-gray-700 mb-6">
+            Track Your Progress
+          </h2>
+          <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">
+              Weight Chart
+            </h3>
+            <div class="p-4 rounded-lg bg-gray-50 h-64 md:h-96">
+              <canvas id="progress-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- AI Progress Analysis Section Removed -->
+
+          <h3 class="text-xl font-semibold text-gray-700 mb-4">
+            Log a New Entry
+          </h3>
+          <form
+            id="progress-form"
+            class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-8"
+          >
+            <div>
+              <label for="progress-date" class="block text-sm font-medium"
+                >Date</label
+              >
+              <input
+                type="date"
+                id="progress-date"
+                class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label for="progress-weight" class="block text-sm font-medium"
+                >Weight (kg)</label
+              >
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                id="progress-weight"
+                class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="e.g., 70.5"
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+            >
+              Log Entry
+            </button>
+            <!-- This is where the error message will appear -->
+            <p
+              id="progress-form-error"
+              class="text-red-500 text-sm text-center md:col-span-3 mt-2"
+            ></p>
+          </form>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">History</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                    >
+                      Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                    >
+                      Weight (kg)
+                    </th>
+                    <th
+                      class="px-6 py-3 text-right text-xs font-medium uppercase"
+                    >
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="progress-history"
+                  class="bg-white divide-y divide-gray-200"
+                ></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+      <main
+        id="fitness-goals-page"
+        class="app-main-page hidden py-10 md:py-16 px-4"
+      >
+        <div
+          class="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8"
+        >
+          <h2 class="text-2xl font-semibold text-gray-700 mb-6">
+            Set Your Fitness Goals
+          </h2>
+          <form id="goals-form" class="space-y-4 mb-8">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="start-weight" class="block text-sm font-medium"
+                  >Start Weight (kg)</label
+                >
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  id="start-weight"
+                  class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="e.g., 75"
+                />
+              </div>
+              <div>
+                <label for="goal-weight" class="block text-sm font-medium"
+                  >Goal Weight (kg)</label
+                >
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  id="goal-weight"
+                  class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="e.g., 68"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+            >
+              Set Goal
+            </button>
+          </form>
+          <div id="goal-progress-display"></div>
+
+          <!-- AI Workout Plan Section Removed -->
+        </div>
+      </main>
+
+      <footer
+        id="app-footer"
+        class="hidden bg-white text-center p-6 mt-16 border-t"
+      >
+        <p class="text-gray-500 text-sm">
+          &copy; 2025 FitCalc. All Rights Reserved.
+        </p>
+      </footer>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import {
+        getAuth,
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        onAuthStateChanged,
+        signOut,
+        signInAnonymously,
+        signInWithCustomToken,
+      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        query,
+        onSnapshot,
+        doc,
+        setDoc,
+        getDoc,
+        getDocs,
+        deleteDoc,
+        Timestamp,
+        limit,
+        setLogLevel, // Added for debugging
+      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+      // --- MANDATORY Firebase & App Config ---
+      // Use global variables provided by the environment
+      const firebaseConfig = {
+        apiKey: "AIzaSyDbdBUzTKC7v_RZA-_QKXr4xf08-OK-H5w",
+        authDomain: "fitcalc-79278.firebaseapp.com",
+        projectId: "fitcalc-79278",
+        storageBucket: "fitcalc-79278.firebasestorage.app",
+        messagingSenderId: "82718310119",
+        appId: "1:82718310119:web:ce65ed20dfd59d525dac42",
+        measurementId: "G-PJXGMD8V0F",
+      };
+
+      let app;
+      let auth;
+      let db;
+      let userId; // Will store the user's UID
+
+      try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        setLogLevel("Debug"); // Enable Firestore logging
+      } catch (e) {
+        console.error("Error initializing Firebase:", e);
+      }
+      // --- END Config ---
+
+      // --- Get ALL HTML Elements ---
+      const authContainer = document.getElementById("auth-container");
+      const appPage = document.getElementById("app-page");
+      const appFooter = document.getElementById("app-footer");
+      const loginPage = document.getElementById("login-page");
+      const signupPage = document.getElementById("signup-page");
+      const loginForm = document.getElementById("login-form");
+      const signupForm = document.getElementById("signup-form");
+      const logoutBtn = document.getElementById("logout-btn");
+      const showLoginLink = document.getElementById("show-login");
+      const showSignupLink = document.getElementById("show-signup");
+      const loginError = document.getElementById("login-error");
+      const signupError = document.getElementById("signup-error");
+      const mainNavLinks = document.querySelectorAll(".nav-link");
+      const mainPages = document.querySelectorAll(".app-main-page");
+
+      // --- Set Max Date for Progress Log ---
+      try {
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date().toISOString().split("T")[0];
+        const progressDateInput = document.getElementById("progress-date");
+        if (progressDateInput) {
+          progressDateInput.setAttribute("max", today);
+        }
+      } catch (e) {
+        console.error("Could not set max date for progress input:", e);
+      }
+      // --- END ---
+
+      // --- App State Variables ---
+      let currentUser = null;
+      let progressChart = null;
+      let unsubscribeListeners = [];
+
+      // --- Authentication ---
+
+      // This function now handles the entire auth flow
+      async function initializeAuth() {
+        if (!auth) {
+          console.error("Firebase Auth is not initialized.");
+          return;
+        }
+
+        // Set up the listener *before* signing in
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            console.log("User signed in:", user.uid);
+            currentUser = user;
+            userId = user.uid; // Set the global userId
+
+            authContainer.classList.add("hidden");
+            authContainer.style.display = "none"; // Ensure it's hidden
+            appPage.classList.remove("hidden");
+            appPage.style.display = "block"; // Ensure it's shown
+            appFooter.classList.remove("hidden");
+
+            attachFirestoreListeners();
+          } else {
+            console.log("User signed out.");
+            currentUser = null;
+            userId = null; // Clear the userId
+
+            authContainer.classList.remove("hidden");
+            authContainer.style.display = "flex"; // Use flex for split screen
+            appPage.classList.add("hidden");
+            appPage.style.display = "none"; // Ensure it's hidden
+            appFooter.classList.add("hidden");
+
+            detachFirestoreListeners();
+          }
+        });
+
+        // Now, attempt to sign in
+        try {
+          if (initialAuthToken) {
+            console.log("Signing in with custom token...");
+            await signInWithCustomToken(auth, initialAuthToken);
+          } else {
+            console.log("No custom token, signing in anonymously...");
+            await signInAnonymously(auth);
+          }
+        } catch (error) {
+          console.error("Error during sign-in:", error);
+          // Show an error to the user if sign-in fails
+          loginError.textContent =
+            //"Could not connect to service. Please refresh.";
+          loginError.classList.remove("hidden");
+        }
+      }
+
+      // Run the auth initialization
+      initializeAuth();
+
+      signupForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+        signupError.classList.add("hidden");
+        createUserWithEmailAndPassword(auth, email, password).catch((error) => {
+          signupError.textContent = error.message;
+          signupError.classList.remove("hidden");
+        });
+      });
+
+      loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+        loginError.classList.add("hidden");
+        signInWithEmailAndPassword(auth, email, password).catch((error) => {
+          loginError.textContent = "Invalid email or password.";
+          loginError.classList.remove("hidden");
+        });
+      });
+
+      logoutBtn.addEventListener("click", () => signOut(auth));
+
+      // --- Firestore Listeners ---
+      function attachFirestoreListeners() {
+        if (!currentUser || !userId || !appId) return; // Guard against missing auth/config
+
+        // Listener for Progress
+        // IMPORTANT: Removed orderBy() to prevent indexing issues. Sorting is now done in render functions.
+        const progressCollectionRef = collection(
+          db,
+          "artifacts",
+          appId,
+          "users",
+          userId,
+          "progress"
+        );
+        const progressQuery = query(progressCollectionRef);
+
+        const progressUnsub = onSnapshot(
+          progressQuery,
+          (snapshot) => {
+            const progressData = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            renderProgressTable(progressData);
+            renderProgressChart(progressData);
+            loadGoalData(); // Reload goal progress when weight changes
+          },
+          (error) => {
+            console.error("Error listening to progress:", error);
+          }
+        );
+
+        // Listener for Goals
+        const goalDocRef = doc(
+          db,
+          "artifacts",
+          appId,
+          "users",
+          userId,
+          "goals",
+          "userGoals"
+        );
+        const goalsUnsub = onSnapshot(
+          goalDocRef,
+          () => loadGoalData(),
+          (error) => {
+            console.error("Error listening to goals:", error);
+          }
+        );
+
+        // Listener for User Profile Data (Height, TDEE)
+        const userDataRef = doc(
+          db,
+          "artifacts",
+          appId,
+          "users",
+          userId,
+          "userData",
+          "profile"
+        );
+        const userDataUnsub = onSnapshot(
+          userDataRef,
+          () => loadGoalData(),
+          (error) => {
+            console.error("Error listening to user data:", error);
+          }
+        );
+
+        unsubscribeListeners = [progressUnsub, goalsUnsub, userDataUnsub];
+      }
+
+      function detachFirestoreListeners() {
+        unsubscribeListeners.forEach((unsub) => unsub());
+        unsubscribeListeners = [];
+      }
+
+      // --- Navigation ---
+      showLoginLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        signupPage.classList.add("hidden");
+        loginPage.classList.remove("hidden");
+      });
+      showSignupLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        loginPage.classList.add("hidden");
+        signupPage.classList.remove("hidden");
+      });
+
+      mainNavLinks.forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          mainPages.forEach((page) => page.classList.add("hidden"));
+          const pageElement = document.getElementById(this.dataset.page);
+          if (pageElement) {
+            pageElement.classList.remove("hidden");
+          }
+          mainNavLinks.forEach((navLink) => {
+            navLink.classList.remove("nav-link-active");
+            navLink.classList.add("text-gray-500");
+          });
+          this.classList.add("nav-link-active");
+          this.classList.remove("text-gray-500");
+        });
+      });
+
+      document.querySelectorAll(".tab-btn").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab-btn")
+            .forEach((item) => item.classList.remove("tab-active"));
+          tab.classList.add("tab-active");
+          document
+            .querySelectorAll(".calculator-content")
+            .forEach((content) => {
+              content.id === tab.dataset.tab
+                ? content.classList.remove("hidden")
+                : content.classList.add("hidden");
+            });
+        });
+      });
+
+      // --- Calculators ---
+      document
+        .getElementById("bmi-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const height = parseFloat(
+            document.getElementById("bmi-height").value
+          );
+          const weight = parseFloat(
+            document.getElementById("bmi-weight").value
+          );
+          if (height > 0 && weight > 0 && currentUser && userId && appId) {
+            const bmi = (weight / (height / 100) ** 2).toFixed(2);
+            const category = getBMICategory(bmi);
+            // Use correct path
+            await setDoc(
+              doc(
+                db,
+                "artifacts",
+                appId,
+                "users",
+                userId,
+                "userData",
+                "profile"
+              ),
+              { height },
+              { merge: true }
+            );
+
+            const bmiResult = document.getElementById("bmi-result");
+            bmiResult.innerHTML = `<p>Your BMI is <strong class="text-2xl font-bold ${getBMICategoryColor(
+              category
+            )}">${bmi}</strong></p><p class="mt-1 ${getBMICategoryColor(
+              category
+            )}">${category}</p><p class="mt-2 text-sm text-green-600 font-semibold">Weight logged to Progress Tracker!</p>`;
+            bmiResult.classList.remove("hidden");
+
+            await saveProgressEntry(Timestamp.now(), weight);
+          } else if (!currentUser) {
+            console.warn("Please log in to save your data.");
+            // You could add a message to bmiResult here if needed
+          }
+        });
+
+      const genderButtons = document.querySelectorAll(
+        "#calorie-form .gender-btn"
+      );
+      genderButtons.forEach((button) =>
+        button.addEventListener("click", () => {
+          genderButtons.forEach((btn) => btn.classList.remove("bg-blue-100"));
+          button.classList.add("bg-blue-100");
+        })
+      );
+
+      document
+        .getElementById("calorie-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const age = parseFloat(document.getElementById("calorie-age").value);
+          const height = parseFloat(
+            document.getElementById("calorie-height").value
+          );
+          const weight = parseFloat(
+            document.getElementById("calorie-weight").value
+          );
+          const activityLevel = document.getElementById("activity-level").value;
+          const selectedGender = document.querySelector(
+            "#calorie-form .gender-btn.bg-blue-100"
+          )?.dataset.value;
+
+          if (age > 0 && height > 0 && weight > 0 && selectedGender) {
+            const bmr =
+              selectedGender === "male"
+                ? 10 * weight + 6.25 * height - 5 * age + 5
+                : 10 * weight + 6.25 * height - 5 * age - 161;
+            const tdee = (bmr * parseFloat(activityLevel)).toFixed(0);
+
+            if (currentUser && userId && appId) {
+              // Use correct path
+              await setDoc(
+                doc(
+                  db,
+                  "artifacts",
+                  appId,
+                  "users",
+                  userId,
+                  "userData",
+                  "profile"
+                ),
+                { tdee, activityLevel },
+                { merge: true }
+              );
+            }
+
+            document.getElementById(
+              "calorie-result"
+            ).innerHTML = `<p>Your daily calorie need is:</p><p class="text-2xl font-bold text-blue-600 mt-1">${tdee} kcal/day</p>`;
+            document
+              .getElementById("calorie-result")
+              .classList.remove("hidden");
+          }
+        });
+
+      document.getElementById("water-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const weight = parseFloat(
+          document.getElementById("water-weight").value
+        );
+        const activity =
+          parseFloat(document.getElementById("water-activity").value) || 0;
+        if (weight > 0) {
+          const intake = (weight * 0.033 + (activity / 30) * 0.35).toFixed(2);
+          document.getElementById(
+            "water-result"
+          ).innerHTML = `<p>Recommended water intake:</p><p class="text-2xl font-bold text-blue-600 mt-1">${intake} Liters/day</p>`;
+          document.getElementById("water-result").classList.remove("hidden");
+        }
+      });
+
+      document
+        .getElementById("protein-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const weight = parseFloat(
+            document.getElementById("protein-weight").value
+          );
+          const goal = parseFloat(
+            document.getElementById("protein-goal").value
+          );
+          if (weight > 0) {
+            const intake = (weight * goal).toFixed(1);
+            document.getElementById(
+              "protein-result"
+            ).innerHTML = `<p>Recommended protein intake:</p><p class="text-2xl font-bold text-blue-600 mt-1">${intake} g/day</p>`;
+            document
+              .getElementById("protein-result")
+              .classList.remove("hidden");
+          }
+        });
+
+      // --- Progress Tracker ---
+      async function saveProgressEntry(date, weight) {
+        if (!currentUser || !userId || !appId) return; // Guard
+        try {
+          // Use correct path
+          await addDoc(
+            collection(db, "artifacts", appId, "users", userId, "progress"),
+            { date, weight: parseFloat(weight) }
+          );
+        } catch (error) {
+          console.error("Error saving progress: ", error);
+        }
+      }
+
+      function renderProgressTable(progressData) {
+        const progressHistory = document.getElementById("progress-history");
+        if (!progressHistory) return; // Exit if user is not on the page
+
+        progressHistory.innerHTML = "";
+        if (progressData.length === 0) {
+          progressHistory.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-500">No entries yet. Log your first weight entry!</td></tr>`;
+          return;
+        }
+
+        // Sort data by date descending (newest first) for the table
+        const sortedData = [...progressData].sort((a, b) => {
+          const dateA = a.date ? a.date.seconds : 0;
+          const dateB = b.date ? b.date.seconds : 0;
+          return dateB - dateA;
+        });
+
+        sortedData.forEach((entry) => {
+          const row = document.createElement("tr");
+          // Ensure date exists before trying to convert
+          const dateString = entry.date
+            ? entry.date.toDate().toLocaleDateString()
+            : "N/A";
+          row.innerHTML = `
+                    <td class="px-6 py-4">${dateString}</td>
+                    <td class="px-6 py-4">${entry.weight} kg</td>
+                    <td class="px-6 py-4 text-right"><button data-id="${entry.id}" class="delete-progress text-red-600 hover:text-red-900">Delete</button></td>
+                `;
+          progressHistory.appendChild(row);
+        });
+      }
+
+      function renderProgressChart(progressData) {
+        const chartElement = document.getElementById("progress-chart");
+        if (!chartElement) return; // Exit if user is not on the page
+
+        const ctx = chartElement.getContext("2d");
+        if (progressChart) progressChart.destroy();
+
+        // Filter out any entries without a date before sorting
+        const validData = progressData.filter((e) => e.date);
+        // Sort data by date ascending (oldest first) for the chart
+        const sortedData = [...validData].sort((a, b) => {
+          const dateA = a.date ? a.date.seconds : 0;
+          const dateB = b.date ? b.date.seconds : 0;
+          return dateA - dateB;
+        });
+
+        progressChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: sortedData.map((e) => e.date.toDate().toLocaleDateString()),
+            datasets: [
+              {
+                label: "Weight (kg)",
+                data: sortedData.map((e) => e.weight),
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                fill: true,
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+          },
+        });
+      }
+
+      document
+        .getElementById("progress-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const dateStr = document.getElementById("progress-date").value;
+          const weight = document.getElementById("progress-weight").value;
+          const errorMsg = document.getElementById("progress-form-error");
+
+          // --- VALIDATION ---
+          const selectedDate = new Date(dateStr + "T00:00:00"); // Treat as local time
+          const todayDate = new Date();
+          todayDate.setHours(23, 59, 59, 999); // Set to end of today
+
+          if (selectedDate > todayDate) {
+            console.warn("Attempted to submit a future date. Blocked.");
+            if (errorMsg)
+              errorMsg.textContent =
+                "You cannot log entries for a future date.";
+            return; // Stop the function
+          }
+
+          // Clear error message if submission is valid
+          if (errorMsg) errorMsg.textContent = "";
+          // --- END VALIDATION ---
+
+          if (dateStr && weight > 0 && currentUser) {
+            await saveProgressEntry(
+              Timestamp.fromDate(new Date(dateStr)),
+              weight
+            );
+            e.target.reset(); // Reset form fields after successful submission
+          } else if (!dateStr || !weight) {
+            if (errorMsg)
+              errorMsg.textContent = "Please fill out both date and weight.";
+          }
+        });
+
+      const progressHistoryTable = document.getElementById("progress-history");
+      if (progressHistoryTable) {
+        progressHistoryTable.addEventListener("click", async (e) => {
+          if (
+            e.target.classList.contains("delete-progress") &&
+            currentUser &&
+            userId &&
+            appId
+          ) {
+            const idToDelete = e.target.dataset.id;
+            try {
+              // Use correct path
+              await deleteDoc(
+                doc(
+                  db,
+                  "artifacts",
+                  appId,
+                  "users",
+                  userId,
+                  "progress",
+                  idToDelete
+                )
+              );
+            } catch (error) {
+              console.error("Error deleting document: ", error);
+            }
+          }
+        });
+      }
+
+      // --- Fitness Goals ---
+      async function loadGoalData() {
+        if (!currentUser || !userId || !appId) return;
+
+        const goalProgressDisplay = document.getElementById(
+          "goal-progress-display"
+        );
+        if (!goalProgressDisplay) return; // Exit if user is not on the page
+
+        // Use correct paths
+        const goalDocRef = doc(
+          db,
+          "artifacts",
+          appId,
+          "users",
+          userId,
+          "goals",
+          "userGoals"
+        );
+        // IMPORTANT: Removed orderBy(). We fetch all and sort client-side.
+        const progressCollectionRef = collection(
+          db,
+          "artifacts",
+          appId,
+          "users",
+          userId,
+          "progress"
+        );
+        const progressQuery = query(progressCollectionRef);
+        const userProfileRef = doc(
+          db,
+          "artifacts",
+          appId,
+          "users",
+          userId,
+          "userData",
+          "profile"
+        );
+
+        try {
+          const [goalSnap, progressSnap, profileSnap] = await Promise.all([
+            getDoc(goalDocRef),
+            getDocs(progressQuery),
+            getDoc(userProfileRef),
+          ]);
+
+          const goals = goalSnap.exists() ? goalSnap.data() : null;
+          const profile = profileSnap.exists() ? profileSnap.data() : {};
+
+          if (!goals) {
+            goalProgressDisplay.innerHTML = `<p class="text-center text-gray-500">No goals set yet.</p>`;
+            return;
+          }
+          if (!profile.height) {
+            goalProgressDisplay.innerHTML = `<p class="text-center text-gray-500">Please calculate BMI first to see goal progress details.</p>`;
+            return;
+          }
+
+          const startWeight = parseFloat(goals.start);
+          const goalWeight = parseFloat(goals.goal);
+
+          // Get the most recent weight entry for current weight
+          let currentWeight = startWeight; // Default to start weight
+          if (!progressSnap.empty) {
+            // Sort client-side to find the most recent entry
+            const allProgress = progressSnap.docs.map((d) => d.data());
+            const sortedProgress = allProgress.sort((a, b) => {
+              const dateA = a.date ? a.date.seconds : 0;
+              const dateB = b.date ? b.date.seconds : 0;
+              return dateB - dateA; // Descending
+            });
+            if (sortedProgress.length > 0) {
+              currentWeight = parseFloat(sortedProgress[0].weight);
+            }
+          }
+
+          // Calculate progress percentage, handle division by zero
+          const totalChangeNeeded = startWeight - goalWeight;
+          const changeMade = startWeight - currentWeight;
+          let progress = 0;
+          if (totalChangeNeeded !== 0) {
+            progress = Math.min(
+              100,
+              Math.max(0, (changeMade / totalChangeNeeded) * 100)
+            );
+          } else if (currentWeight === goalWeight) {
+            progress = 100; // Goal achieved if start and goal were the same
+          }
+
+          const weightToGo = (currentWeight - goalWeight).toFixed(1);
+          const goalBMI = (goalWeight / (profile.height / 100) ** 2).toFixed(2);
+          const goalBMICategory = getBMICategory(goalBMI);
+          const disclaimer =
+            goalBMICategory === "Underweight" || goalBMICategory === "Obesity"
+              ? `<div class="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm mt-6"><strong>Health Disclaimer:</strong> Your target is in the '${goalBMICategory}' category. Consult a healthcare professional before pursuing this goal.</div>`
+              : "";
+
+          let tips = "";
+          if (parseFloat(weightToGo) > 0) {
+            // Need to lose weight
+            tips = `<h4 class="font-semibold mt-6 mb-2">Weight Loss Tips:</h4>`;
+            if (profile.tdee)
+              tips += `<p class="mb-2">Your estimated maintenance calories are ${
+                profile.tdee
+              } kcal. Aim for a moderate deficit (e.g., <strong class="text-blue-600">${
+                profile.tdee - 500
+              } kcal</strong> daily).</p>`;
+            tips += `<ul class="list-disc list-inside text-sm text-gray-600"><li>Prioritize protein & fiber to feel full.</li><li>Incorporate regular cardio & strength training.</li><li>Stay hydrated and manage portion sizes.</li></ul>`;
+          } else if (parseFloat(weightToGo) < 0) {
+            // Need to gain weight
+            tips = `<h4 class="font-semibold mt-6 mb-2">Weight Gain Tips:</h4>`;
+            if (profile.tdee)
+              tips += `<p class="mb-2">Your estimated maintenance calories are ${
+                profile.tdee
+              } kcal. Aim for a moderate surplus (e.g., <strong class="text-blue-600">${
+                parseInt(profile.tdee) + 300
+              } kcal</strong> daily).</p>`;
+            tips += `<ul class="list-disc list-inside text-sm text-gray-600"><li>Focus on nutrient-dense foods and snacks.</li><li>Ensure high protein intake & prioritize strength training.</li><li>Don't skip meals; consider liquid calories like smoothies.</li></ul>`;
+          } else {
+            // Goal weight reached
+            tips = `<h4 class="font-semibold text-green-600 mt-6 mb-2">Congratulations!</h4><p>You've reached your goal weight! Focus on maintaining healthy habits.</p>`;
+          }
+
+          goalProgressDisplay.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-4">Your Goal Progress</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between font-medium text-sm md:text-base">
+                            <span>Start: ${startWeight} kg</span>
+                            <span>Current: ${currentWeight} kg</span>
+                            <span>Goal: ${goalWeight} kg</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                            <div class="bg-blue-600 h-4 rounded-full transition-all duration-500 ease-out" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="text-center font-semibold ${
+                          parseFloat(weightToGo) === 0
+                            ? "text-green-600"
+                            : "text-blue-600"
+                        }">
+                            ${
+                              parseFloat(weightToGo) === 0
+                                ? "Goal Achieved!"
+                                : `You are ${Math.abs(
+                                    weightToGo
+                                  )} kg away from your goal!`
+                            }
+                        </div>
+                    </div>
+                    ${disclaimer}
+                    ${tips}
+                `;
+        } catch (error) {
+          console.error("Error loading goal data:", error);
+          goalProgressDisplay.innerHTML = `<p class="text-center text-red-500">Error loading goal data. Check console.</p>`;
+        }
+      }
+
+      document
+        .getElementById("goals-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (!currentUser || !userId || !appId) {
+            console.warn("User not logged in. Cannot set goal.");
+            // Optionally show a message to the user here
+            return;
+          }
+
+          const startInput = document.getElementById("start-weight");
+          const goalInput = document.getElementById("goal-weight");
+          const start = parseFloat(startInput.value);
+          const goal = parseFloat(goalInput.value);
+
+          if (start > 0 && goal > 0) {
+            try {
+              // Use correct path
+              await setDoc(
+                doc(
+                  db,
+                  "artifacts",
+                  appId,
+                  "users",
+                  userId,
+                  "goals",
+                  "userGoals"
+                ),
+                { start, goal }
+              );
+              console.log("Goal saved successfully!");
+              // Optionally clear the form or give user feedback
+              // startInput.value = '';
+              // goalInput.value = '';
+              // alert("Goal saved!"); // Avoid using alert if possible
+            } catch (error) {
+              console.error("Error saving goal: ", error);
+              // Optionally show an error message to the user
+            }
+          } else {
+            console.warn("Invalid start or goal weight entered.");
+            // Optionally show an error message to the user
+          }
+        });
+
+      // --- Helper Functions ---
+      function getBMICategory(bmi) {
+        if (bmi < 18.5) return "Underweight";
+        if (bmi < 25) return "Normal weight";
+        if (bmi < 30) return "Overweight";
+        return "Obesity";
+      }
+
+      function getBMICategoryColor(category) {
+        if (category === "Underweight") return "text-yellow-600";
+        if (category === "Normal weight") return "text-green-600";
+        if (category === "Overweight") return "text-orange-600";
+        return "text-red-600";
+      }
+    </script>
+  </body>
+</html>

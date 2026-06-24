@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🏋️ FitCalc — Your All-in-One Fitness Companion
 
@@ -24,12 +24,12 @@
 
 - [About the Project](#-about-the-project)
 - [Key Features](#-key-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#-architecture)
+- [Tech Stack](#️-tech-stack)
+- [Architecture](#️-architecture)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
 - [Deployment](#-deployment)
-- [Future Roadmap](#-future-roadmap)
+- [Future Roadmap](#️-future-roadmap)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -41,16 +41,20 @@ FitCalc was born from the idea that tracking your health shouldn't require juggl
 
 The entire front-end is built with **zero frameworks** — just vanilla HTML, CSS, and ES6+ JavaScript — while Firebase provides a robust, serverless back-end for authentication, data persistence, and hosting.
 
+🔗 **Deployed at:** [https://fitcalc-79278.web.app](https://fitcalc-79278.web.app)
+
 ---
 
 ## ✨ Key Features
 
 ### 🔐 Secure Authentication
 - Email/password sign-up & login powered by **Firebase Authentication**
-- Seamless re-authentication flow for sensitive account changes (email/password updates)
+- **Remember Me** option — choose to stay logged in across browser sessions
+- Seamless re-authentication flow for password changes
 - Animated crossfade transitions between auth forms
 
 ### 📊 Fitness Calculators
+
 | Calculator | Description |
 |:---|:---|
 | **BMI** | Calculates Body Mass Index with color-coded health categories (Underweight, Normal, Overweight, Obese) |
@@ -78,7 +82,8 @@ The entire front-end is built with **zero frameworks** — just vanilla HTML, CS
 ### 👤 Profile & Account Settings
 - Manage personal details (Name, Birthdate, Height) with **auto-calculated age**
 - Latest weight synced automatically from the Progress Tracker
-- Secure credential updates with Firebase re-authentication
+- Email displayed as read-only (logged-in identity)
+- Secure password change with current password verification
 
 ### 🎨 Premium Design
 - Fully **responsive** — optimized for mobile, tablet, and desktop
@@ -147,7 +152,7 @@ FitCalc/
 ├── firebase.json                     # Firebase hosting config
 ├── .firebaserc                       # Firebase project alias (fitcalc-79278)
 ├── .gitignore                        # Git ignore rules
-└── README.md                         # ← You are here
+└── README.md
 ```
 
 ---
@@ -186,7 +191,6 @@ FitCalc/
    - Configure as SPA → `No`
    - Set up GitHub builds → `No`
 
-
 4. **Start the local server**
    ```bash
    firebase serve
@@ -209,15 +213,17 @@ To deploy hosting along with Firestore security rules:
 firebase deploy --only "hosting,firestore"
 ```
 
+🔗 **Live URL:** [https://fitcalc-79278.web.app](https://fitcalc-79278.web.app)
+
 ---
 
 ## 🗺️ Future Roadmap
 
-- [ ] **📱 PWA Support** — Installable app with offline capabilities
-- [ ] **👥 Social Features** — Share progress and achievements with friends
-- [ ] **📏 More Metrics** — Body measurements (waist, hips, chest) and body fat percentage
-- [ ] **📊 Advanced Analytics** — Weekly/monthly trends, streaks, and insights
-- [ ] **🌍 Unit Preferences** — Toggle between metric (kg/cm) and imperial (lbs/in)
+- [ ] 📱 **PWA Support** — Installable app with offline capabilities
+- [ ] 👥 **Social Features** — Share progress and achievements with friends
+- [ ] 📏 **More Metrics** — Body measurements (waist, hips, chest) and body fat percentage
+- [ ] 📊 **Advanced Analytics** — Weekly/monthly trends, streaks, and insights
+- [ ] 🌍 **Unit Preferences** — Toggle between metric (kg/cm) and imperial (lbs/in)
 
 ---
 
@@ -243,7 +249,6 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 
 Built with ❤️ for health and fitness.
 
-**[⬆ Back to Top](#-fitcalc--your-all-in-one-fitness-companion)**
+**[⬆ Back to Top](#️-fitcalc--your-all-in-one-fitness-companion)**
 
 </div>
-]]>
